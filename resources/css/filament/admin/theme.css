@@ -1,0 +1,238 @@
+/* resources/css/filament/admin/theme.css */
+
+@import '/vendor/filament/filament/resources/css/theme.css';
+
+@config 'tailwind.config.js';
+
+/* Custom animations */
+@keyframes pulse-slow {
+    0%, 100% {
+        opacity: 1;
+    }
+    50% {
+        opacity: .5;
+    }
+}
+
+.animate-pulse-slow {
+    animation: pulse-slow 3s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+}
+
+/* Custom card hover effects */
+.hover-card {
+    transition: all 0.3s ease;
+}
+
+.hover-card:hover {
+    transform: translateY(-4px);
+    box-shadow: 0 10px 25px rgba(0, 0, 0, 0.1);
+}
+
+/* Gradient backgrounds */
+.gradient-blue {
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+}
+
+.gradient-green {
+    background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+}
+
+.gradient-purple {
+    background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);
+}
+
+/* Custom scrollbar */
+.custom-scrollbar::-webkit-scrollbar {
+    width: 8px;
+    height: 8px;
+}
+
+.custom-scrollbar::-webkit-scrollbar-track {
+    background: #f1f1f1;
+    border-radius: 10px;
+}
+
+.custom-scrollbar::-webkit-scrollbar-thumb {
+    background: #888;
+    border-radius: 10px;
+}
+
+.custom-scrollbar::-webkit-scrollbar-thumb:hover {
+    background: #555;
+}
+
+/* Status badges custom colors */
+.status-present {
+    background-color: #10b981;
+    color: white;
+    padding: 0.25rem 0.75rem;
+    border-radius: 9999px;
+    font-size: 0.75rem;
+    font-weight: 600;
+}
+
+.status-late {
+    background-color: #f59e0b;
+    color: white;
+    padding: 0.25rem 0.75rem;
+    border-radius: 9999px;
+    font-size: 0.75rem;
+    font-weight: 600;
+}
+
+.status-absent {
+    background-color: #ef4444;
+    color: white;
+    padding: 0.25rem 0.75rem;
+    border-radius: 9999px;
+    font-size: 0.75rem;
+    font-weight: 600;
+}
+
+/* Live indicator */
+.live-indicator {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+.live-dot {
+    width: 8px;
+    height: 8px;
+    background-color: #10b981;
+    border-radius: 50%;
+    animation: pulse 2s infinite;
+}
+
+@keyframes pulse {
+    0%, 100% {
+        opacity: 1;
+    }
+    50% {
+        opacity: 0.5;
+    }
+}
+
+/* Chart containers */
+.chart-container {
+    position: relative;
+    height: 300px;
+    width: 100%;
+}
+
+/* Dashboard grid improvements */
+.dashboard-grid {
+    display: grid;
+    gap: 1.5rem;
+}
+
+/* Responsive stats cards */
+@media (min-width: 640px) {
+    .stats-grid {
+        grid-template-columns: repeat(2, 1fr);
+    }
+}
+
+@media (min-width: 1024px) {
+    .stats-grid {
+        grid-template-columns: repeat(4, 1fr);
+    }
+}
+
+/* Alert box styles */
+.alert-danger {
+    background-color: #fee;
+    border-left: 4px solid #ef4444;
+    padding: 1rem;
+    border-radius: 0.5rem;
+    margin-bottom: 1rem;
+}
+
+.alert-warning {
+    background-color: #fffbeb;
+    border-left: 4px solid #f59e0b;
+    padding: 1rem;
+    border-radius: 0.5rem;
+    margin-bottom: 1rem;
+}
+
+.alert-success {
+    background-color: #f0fdf4;
+    border-left: 4px solid #10b981;
+    padding: 1rem;
+    border-radius: 0.5rem;
+    margin-bottom: 1rem;
+}
+
+/* Loading spinner */
+.loading-spinner {
+    border: 3px solid #f3f3f3;
+    border-top: 3px solid #3498db;
+    border-radius: 50%;
+    width: 40px;
+    height: 40px;
+    animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+    0% { transform: rotate(0deg); }
+    100% { transform: rotate(360deg); }
+}
+
+/* Table enhancements */
+.table-hover tbody tr:hover {
+    background-color: rgba(59, 130, 246, 0.05);
+    transition: background-color 0.2s ease;
+}
+
+/* Card shadows */
+.card-shadow-sm {
+    box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.1), 0 1px 2px 0 rgba(0, 0, 0, 0.06);
+}
+
+.card-shadow-md {
+    box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+}
+
+.card-shadow-lg {
+    box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
+}
+
+/* Progress bar animations */
+.progress-bar {
+    transition: width 1s ease-in-out;
+}
+
+/* Notification bell animation */
+@keyframes ring {
+    0% { transform: rotate(0); }
+    10% { transform: rotate(15deg); }
+    20% { transform: rotate(-15deg); }
+    30% { transform: rotate(15deg); }
+    40% { transform: rotate(-15deg); }
+    50% { transform: rotate(0); }
+    100% { transform: rotate(0); }
+}
+
+.ring-animation {
+    animation: ring 2s ease-in-out infinite;
+}
+
+/* Dark mode improvements */
+@media (prefers-color-scheme: dark) {
+    .dark\:gradient-dark {
+        background: linear-gradient(135deg, #1e3a8a 0%, #312e81 100%);
+    }
+    
+    .custom-scrollbar::-webkit-scrollbar-track {
+        background: #374151;
+    }
+    
+    .custom-scrollbar::-webkit-scrollbar-thumb {
+        background: #6b7280;
+    }
+    
+    .custom-scrollbar::-webkit-scrollbar-thumb:hover {
+        background: #9ca3af;
+    }
+}

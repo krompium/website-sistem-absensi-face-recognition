@@ -12,9 +12,9 @@ class DatabaseSeeder extends Seeder
     {
         // Create classes
         $classes = [
-            ['name' => 'X IPA 1', 'grade' => '10', 'major' => 'IPA', 'homeroom_teacher' => 'Pak Budi'],
-            ['name' => 'X IPA 2', 'grade' => '10', 'major' => 'IPA', 'homeroom_teacher' => 'Bu Siti'],
-            ['name' => 'XI IPS 1', 'grade' => '11', 'major' => 'IPS', 'homeroom_teacher' => 'Pak Ahmad'],
+            ['name' => 'X RPL 1', 'grade' => '10', 'major' => 'RPL', 'homeroom_teacher' => 'Pak Budi'],
+            ['name' => 'X TKJ 2', 'grade' => '10', 'major' => 'TKJ', 'homeroom_teacher' => 'Bu Siti'],
+            ['name' => 'XI RPL 1', 'grade' => '11', 'major' => 'RPL', 'homeroom_teacher' => 'Pak Ahmad'],
         ];
 
         foreach ($classes as $class) {

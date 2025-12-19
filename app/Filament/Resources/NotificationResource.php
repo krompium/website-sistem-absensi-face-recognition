@@ -3,7 +3,7 @@
 namespace App\Filament\Resources;
 
 use App\Filament\Resources\NotificationResource\Pages;
-use App\Models\Notification;
+use App\Models\WhatsappNotification;
 use Filament\Forms;
 use Filament\Forms\Form;
 use Filament\Resources\Resource;
@@ -15,7 +15,7 @@ use Illuminate\Database\Eloquent\Builder;
 
 class NotificationResource extends Resource
 {
-    protected static ?string $model = Notification::class;
+    protected static ?string $model = WhatsappNotification::class;
     protected static ?string $navigationIcon = 'heroicon-o-bell-alert';
     protected static ?string $navigationLabel = 'Notifikasi';
     protected static ?string $navigationGroup = 'Monitoring';

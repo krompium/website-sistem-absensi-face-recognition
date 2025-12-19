@@ -10,9 +10,9 @@ return new class extends Migration
     {
         Schema::create('classes', function (Blueprint $table) {
             $table->id();
-            $table->string('name'); // Contoh: "X IPA 1"
+            $table->string('name'); // Contoh: "X RPL 1"
             $table->string('grade'); // Contoh: "10", "11", "12"
-            $table->string('major')->nullable(); // IPA, IPS, Bahasa
+            $table->string('major')->nullable(); // RPL, TKJ
             $table->string('homeroom_teacher')->nullable();
             $table->integer('capacity')->default(30);
             $table->boolean('is_active')->default(true);

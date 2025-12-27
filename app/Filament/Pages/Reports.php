@@ -33,6 +33,7 @@ class Reports extends Page implements HasForms
             'start_date' => today()->startOfMonth(),
             'end_date' => today(),
             'report_type' => 'attendance',
+            'format' => 'pdf', // Tambahkan ini agar state awal terisi
         ]);
     }
 

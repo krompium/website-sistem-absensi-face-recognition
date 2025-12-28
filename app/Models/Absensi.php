@@ -20,11 +20,11 @@ class Absensi extends Model
      * - Deteksi mabuk: di tabel terpisah (_indikasi_siswa)
      * ===================================
      */
-    
+
     protected $table = 'absensi';
     protected $primaryKey = 'id_absensi';
     public $timestamps = false; // Hanya ada created_at
-    
+
     protected $fillable = [
         'kode_siswa',
         'id_kelas',
@@ -45,7 +45,7 @@ class Absensi extends Model
     ];
 
     // ========== RELATIONSHIPS ==========
-    
+
     public function siswa(): BelongsTo
     {
         return $this->belongsTo(Siswa::class, 'kode_siswa', 'kode_siswa');
@@ -62,7 +62,7 @@ class Absensi extends Model
     }
 
     // ========== ACCESSORS ==========
-    
+
     public function getStatusLabelAttribute(): string
     {
         return match($this->status) {
@@ -75,7 +75,7 @@ class Absensi extends Model
     }
 
     // ========== HELPER METHODS ==========
-    
+
     public function isHadir(): bool
     {
         return $this->status === 'HADIR';
@@ -127,7 +127,7 @@ class Absensi extends Model
     }
 
     // Deteksi Mabuk Helpers
-    
+
     public function getIndikasiMasuk(): ?IndikasiSiswa
     {
         return $this->indikasi()
@@ -157,7 +157,7 @@ class Absensi extends Model
     }
 
     // ========== SCOPES ==========
-    
+
     public function scopeHadir($query)
     {
         return $query->where('status', 'HADIR');

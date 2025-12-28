@@ -26,7 +26,7 @@ class Reports extends Page implements HasForms
     protected static string $view = 'filament.pages.reports';
 
     public ?array $data = [];
-    
+
     public function mount(): void
     {
         $this->form->fill([
@@ -138,7 +138,7 @@ class Reports extends Page implements HasForms
         // 1. Generate PDF/Excel using libraries like DomPDF, Laravel Excel
         // 2. Return download response
         // 3. Or send email with attachment
-        
+
         // Example implementation:
         // return $this->downloadReport($data);
     }
@@ -158,7 +158,7 @@ class Reports extends Page implements HasForms
     public function getReportPreview()
     {
         $data = $this->form->getState();
-        
+
         if (!$data['start_date'] || !$data['end_date']) {
             return null;
         }
@@ -189,7 +189,7 @@ class Reports extends Page implements HasForms
 
         // Count drunk detections
         $drunkDetections = $absensis->filter(function ($absensi) {
-            return $absensi->indikasiSiswa()->where('final_decision', 'MABUK')->exists();
+            return $absensi->indikasi()->where('final_decision', 'DRUNK INDICATION')->exists();
         })->count();
 
         // Calculate late attendances (jam_masuk after 07:30)
@@ -207,7 +207,7 @@ class Reports extends Page implements HasForms
             'sakit' => $sakit,
             'alpa' => $alpa,
             'terlambat' => $late,
-            'deteksi_mabuk' => $drunkDetections,
+            'deteksi_DRUNK INDICATION' => $drunkDetections,
             'date_range' => $startDate->format('d/m/Y') . ' - ' . $endDate->format('d/m/Y'),
             'percentage' => [
                 'hadir' => $absensis->count() > 0 ? round(($hadir / $absensis->count()) * 100, 1) : 0,
@@ -227,19 +227,19 @@ class Reports extends Page implements HasForms
         switch ($filters['report_type']) {
             case 'attendance':
                 return $this->getAttendanceReport($startDate, $endDate, $filters);
-            
+
             case 'class_summary':
                 return $this->getClassSummaryReport($startDate, $endDate, $filters);
-            
+
             case 'student_detail':
                 return $this->getStudentDetailReport($startDate, $endDate, $filters);
-            
+
             case 'drunk_detection':
                 return $this->getDrunkDetectionReport($startDate, $endDate, $filters);
-            
+
             case 'late_report':
                 return $this->getLateReport($startDate, $endDate, $filters);
-            
+
             default:
                 return [];
         }
@@ -264,7 +264,7 @@ class Reports extends Page implements HasForms
     protected function getClassSummaryReport($startDate, $endDate, $filters): array
     {
         $kelasQuery = Kelas::query();
-        
+
         if (!empty($filters['id_kelas'])) {
             $kelasQuery->where('id_kelas', $filters['id_kelas']);
         }
@@ -298,7 +298,7 @@ class Reports extends Page implements HasForms
     protected function getStudentDetailReport($startDate, $endDate, $filters): array
     {
         $siswa = Siswa::where('kode_siswa', $filters['kode_siswa'])->first();
-        
+
         if (!$siswa) {
             return [];
         }
@@ -328,7 +328,7 @@ class Reports extends Page implements HasForms
         $query = Absensi::whereBetween('tanggal', [$startDate, $endDate])
             ->with(['siswa', 'siswa.kelas', 'indikasiSiswa'])
             ->whereHas('indikasiSiswa', function ($q) {
-                $q->where('final_decision', 'MABUK');
+                $q->where('final_decision', 'DRUNK INDICATION');
             });
 
         if (!empty($filters['id_kelas'])) {

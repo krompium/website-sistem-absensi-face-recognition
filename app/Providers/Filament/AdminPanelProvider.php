@@ -49,7 +49,6 @@ class AdminPanelProvider extends PanelProvider
                 \App\Filament\Widgets\StatsOverviewWidget::class,
                 \App\Filament\Widgets\AttendanceChartWidget::class,
                 \App\Filament\Widgets\ClassAttendanceWidget::class,
-                \App\Filament\Widgets\DrunkDetectionAlertWidget::class,
                 \App\Filament\Widgets\LatestAttendancesWidget::class,
             ])
             ->middleware([
@@ -66,8 +65,8 @@ class AdminPanelProvider extends PanelProvider
             ->authMiddleware([
                 Authenticate::class,
             ])
-            ->databaseNotifications()
-            ->databaseNotificationsPolling('30s')
+            ->databaseNotifications(false)
+            // ->databaseNotificationsPolling('30s')
             ->navigationGroups([
                 'Master Data',
                 'Monitoring',

@@ -1,70 +1,33 @@
 <?php
 
-// namespace App\Models;
-
-// // use Illuminate\Contracts\Auth\MustVerifyEmail;
-// use Illuminate\Database\Eloquent\Factories\HasFactory;
-// use Illuminate\Foundation\Auth\User as Authenticatable;
-// use Illuminate\Notifications\Notifiable;
-
-// class User extends Authenticatable
-// {
-//     /** @use HasFactory<\Database\Factories\UserFactory> */
-//     use HasFactory, Notifiable;
-
-//     /**
-//      * The attributes that are mass assignable.
-//      *
-//      * @var list<string>
-//      */
-//     protected $fillable = [
-//         'name',
-//         'email',
-//         'password',
-//     ];
-
-//     /**
-//      * The attributes that should be hidden for serialization.
-//      *
-//      * @var list<string>
-//      */
-//     protected $hidden = [
-//         'password',
-//         'remember_token',
-//     ];
-
-//     /**
-//      * Get the attributes that should be cast.
-//      *
-//      * @return array<string, string>
-//      */
-//     protected function casts(): array
-//     {
-//         return [
-//             'email_verified_at' => 'datetime',
-//             'password' => 'hashed',
-//         ];
-//     }
-// }
-
 namespace App\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
+use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 
 class User extends Authenticatable
 {
     use HasFactory, Notifiable;
 
     /**
-     * ========== PERUBAHAN: TAMBAH ROLE ==========
+     * ========== PERUBAHAN STRUKTUR ==========
+     * - Primary Key: id_user (bukan id)
+     * - Role: guru/administrator
+     * - Relasi: belongsToMany ke Kelas via _guru_kelas
+     * ========================================
      */
+    
+    protected $primaryKey = 'id_user';
+    
     protected $fillable = [
         'name',
         'email',
         'password',
-        'role', // BARU: admin atau staff
+        'role',
+        'is_active',
+        'last_login_at',
     ];
 
     protected $hidden = [
@@ -77,29 +40,61 @@ class User extends Authenticatable
         return [
             'email_verified_at' => 'datetime',
             'password' => 'hashed',
+            'is_active' => 'boolean',
+            'last_login_at' => 'datetime',
         ];
     }
 
-    // ========== HELPER METHODS BARU ==========
+    // ========== RELATIONSHIPS ==========
     
-    public function isAdmin(): bool
+    public function kelasYangDiajar(): BelongsToMany
     {
-        return $this->role === 'admin';
+        return $this->belongsToMany(
+            Kelas::class,
+            '_guru_kelas',
+            'id_user',
+            'id_kelas',
+            'id_user',
+            'id_kelas'
+        )->withTimestamps();
     }
 
-    public function isStaff(): bool
+    // ========== HELPER METHODS ==========
+    
+    public function isAdministrator(): bool
     {
-        return $this->role === 'staff';
+        return $this->role === 'administrator';
     }
 
-    // Scopes
-    public function scopeAdmins($query)
+    public function isGuru(): bool
     {
-        return $query->where('role', 'admin');
+        return $this->role === 'guru';
     }
 
-    public function scopeStaff($query)
+    public function isActive(): bool
     {
-        return $query->where('role', 'staff');
+        return $this->is_active === true;
+    }
+
+    public function updateLastLogin(): void
+    {
+        $this->update(['last_login_at' => now()]);
+    }
+
+    // ========== SCOPES ==========
+    
+    public function scopeAdministrators($query)
+    {
+        return $query->where('role', 'administrator');
+    }
+
+    public function scopeGuru($query)
+    {
+        return $query->where('role', 'guru');
+    }
+
+    public function scopeActive($query)
+    {
+        return $query->where('is_active', true);
     }
 }

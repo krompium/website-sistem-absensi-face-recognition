@@ -1,10 +1,9 @@
 <?php
-// app/Filament/Widgets/ClassAttendanceWidget.php
 
 namespace App\Filament\Widgets;
 
-use App\Models\Classes;
-use App\Models\Attendance;
+use App\Models\Kelas;
+use App\Models\Absensi;
 use Filament\Widgets\ChartWidget;
 use Carbon\Carbon;
 
@@ -15,40 +14,42 @@ class ClassAttendanceWidget extends ChartWidget
 
     protected function getData(): array
     {
-        $classes = Classes::where('is_active', true)
-            ->with(['students' => function($query) {
-                $query->where('is_active', true);
-            }])
+        // ========== FIX: Struktur baru ==========
+        $kelasList = Kelas::withCount('siswa') // Hitung jumlah siswa per kelas
+            ->orderBy('tingkat')
+            ->orderBy('urutan')
             ->get();
 
         $labels = collect();
-        $present = collect();
-        $absent = collect();
+        $hadir = collect();
+        $tidakHadir = collect();
 
-        foreach ($classes as $class) {
-            $labels->push($class->name);
+        foreach ($kelasList as $kelas) {
+            // Label menggunakan id_kelas
+            $labels->push($kelas->id_kelas);
 
-            $totalStudents = $class->students->count();
+            $totalSiswa = $kelas->siswa_count;
             
-            $presentCount = Attendance::whereDate('date', today())
-                ->whereIn('student_id', $class->students->pluck('id'))
-                ->whereIn('status', ['present', 'late'])
+            // Hitung yang hadir hari ini
+            $hadirCount = Absensi::whereDate('tanggal', today()) // Fix: date → tanggal
+                ->where('id_kelas', $kelas->id_kelas) // Fix: pakai id_kelas
+                ->where('status', 'HADIR') // Fix: present → HADIR
                 ->count();
 
-            $present->push($presentCount);
-            $absent->push($totalStudents - $presentCount);
+            $hadir->push($hadirCount);
+            $tidakHadir->push($totalSiswa - $hadirCount);
         }
 
         return [
             'datasets' => [
                 [
                     'label' => 'Hadir',
-                    'data' => $present->toArray(),
+                    'data' => $hadir->toArray(),
                     'backgroundColor' => 'rgba(34, 197, 94, 0.7)',
                 ],
                 [
                     'label' => 'Tidak Hadir',
-                    'data' => $absent->toArray(),
+                    'data' => $tidakHadir->toArray(),
                     'backgroundColor' => 'rgba(239, 68, 68, 0.7)',
                 ],
             ],
@@ -77,6 +78,9 @@ class ClassAttendanceWidget extends ChartWidget
                 'y' => [
                     'stacked' => true,
                     'beginAtZero' => true,
+                    'ticks' => [
+                        'stepSize' => 5,
+                    ],
                 ],
             ],
         ];

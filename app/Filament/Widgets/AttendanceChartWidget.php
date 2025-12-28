@@ -1,9 +1,8 @@
 <?php
-// app/Filament/Widgets/AttendanceChartWidget.php
 
 namespace App\Filament\Widgets;
 
-use App\Models\Attendance;
+use App\Models\Absensi;
 use Filament\Widgets\ChartWidget;
 use Carbon\Carbon;
 
@@ -15,56 +14,76 @@ class AttendanceChartWidget extends ChartWidget
     protected function getData(): array
     {
         $days = collect();
-        $present = collect();
-        $late = collect();
-        $absent = collect();
+        $hadir = collect();
+        $izin = collect();
+        $sakit = collect();
+        $alpa = collect();
 
         // Get last 7 days
         for ($i = 6; $i >= 0; $i--) {
             $date = Carbon::today()->subDays($i);
             $days->push($date->format('d/m'));
 
-            // Count present
-            $presentCount = Attendance::whereDate('date', $date)
-                ->where('status', 'present')
+            // ========== FIX: Gunakan field & status baru ==========
+            
+            // Count HADIR
+            $hadirCount = Absensi::whereDate('tanggal', $date) // Fix: date → tanggal
+                ->where('status', 'HADIR') // Fix: present → HADIR
                 ->count();
-            $present->push($presentCount);
+            $hadir->push($hadirCount);
 
-            // Count late
-            $lateCount = Attendance::whereDate('date', $date)
-                ->where('status', 'late')
+            // Count IZIN
+            $izinCount = Absensi::whereDate('tanggal', $date)
+                ->where('status', 'IZIN')
                 ->count();
-            $late->push($lateCount);
+            $izin->push($izinCount);
 
-            // Count absent (sick + permission + absent)
-            $absentCount = Attendance::whereDate('date', $date)
-                ->whereIn('status', ['absent', 'sick', 'permission'])
+            // Count SAKIT
+            $sakitCount = Absensi::whereDate('tanggal', $date)
+                ->where('status', 'SAKIT')
                 ->count();
-            $absent->push($absentCount);
+            $sakit->push($sakitCount);
+
+            // Count ALPA
+            $alpaCount = Absensi::whereDate('tanggal', $date)
+                ->where('status', 'ALPA')
+                ->count();
+            $alpa->push($alpaCount);
         }
 
         return [
             'datasets' => [
                 [
                     'label' => 'Hadir',
-                    'data' => $present->toArray(),
+                    'data' => $hadir->toArray(),
                     'backgroundColor' => 'rgba(34, 197, 94, 0.2)',
                     'borderColor' => 'rgb(34, 197, 94)',
                     'borderWidth' => 2,
+                    'tension' => 0.3,
                 ],
                 [
-                    'label' => 'Terlambat',
-                    'data' => $late->toArray(),
+                    'label' => 'Izin',
+                    'data' => $izin->toArray(),
+                    'backgroundColor' => 'rgba(59, 130, 246, 0.2)',
+                    'borderColor' => 'rgb(59, 130, 246)',
+                    'borderWidth' => 2,
+                    'tension' => 0.3,
+                ],
+                [
+                    'label' => 'Sakit',
+                    'data' => $sakit->toArray(),
                     'backgroundColor' => 'rgba(251, 191, 36, 0.2)',
                     'borderColor' => 'rgb(251, 191, 36)',
                     'borderWidth' => 2,
+                    'tension' => 0.3,
                 ],
                 [
-                    'label' => 'Tidak Hadir',
-                    'data' => $absent->toArray(),
+                    'label' => 'Alpa',
+                    'data' => $alpa->toArray(),
                     'backgroundColor' => 'rgba(239, 68, 68, 0.2)',
                     'borderColor' => 'rgb(239, 68, 68)',
                     'borderWidth' => 2,
+                    'tension' => 0.3,
                 ],
             ],
             'labels' => $days->toArray(),

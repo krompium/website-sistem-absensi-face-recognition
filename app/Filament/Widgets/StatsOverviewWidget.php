@@ -1,12 +1,11 @@
 <?php
-// app/Filament/Widgets/StatsOverviewWidget.php
 
 namespace App\Filament\Widgets;
 
-use App\Models\Student;
-use App\Models\Attendance;
-use App\Models\Detection;
-use App\Models\Classes;
+use App\Models\Siswa;
+use App\Models\Absensi;
+use App\Models\Kelas;
+use App\Models\IndikasiSiswa;
 use Filament\Widgets\StatsOverviewWidget as BaseWidget;
 use Filament\Widgets\StatsOverviewWidget\Stat;
 
@@ -18,17 +17,24 @@ class StatsOverviewWidget extends BaseWidget
     {
         $today = today();
         
+        // ========== FIX: Struktur baru tidak ada is_active di siswa & kelas ==========
+        
         // Total Students
-        $totalStudents = Student::where('is_active', true)->count();
+        $totalStudents = Siswa::count();
         
         // Today's attendance
-        $todayAttendance = Attendance::whereDate('date', $today)->count();
-        $todayPresent = Attendance::whereDate('date', $today)
-            ->whereIn('status', ['present', 'late'])
+        $todayAttendance = Absensi::whereDate('tanggal', $today)->count(); // Fix: date → tanggal
+        
+        $todayPresent = Absensi::whereDate('tanggal', $today)
+            ->where('status', 'HADIR') // Fix: present → HADIR
             ->count();
-        $todayLate = Attendance::whereDate('date', $today)
-            ->where('status', 'late')
+        
+        $todayLate = Absensi::whereDate('tanggal', $today)
+            ->whereIn('status', ['HADIR']) // Di struktur baru tidak ada status "late", semua HADIR
+            ->whereNotNull('jam_masuk')
+            ->whereTime('jam_masuk', '>', '07:30:00') // Asumsi terlambat jika masuk > 07:30
             ->count();
+        
         $todayAbsent = $totalStudents - $todayAttendance;
         
         // Attendance rate
@@ -36,17 +42,19 @@ class StatsOverviewWidget extends BaseWidget
             ? round(($todayPresent / $totalStudents) * 100, 1) 
             : 0;
         
-        // Drunk detections today
-        $drunkDetections = Detection::whereDate('created_at', $today)
-            ->whereIn('drunk_status', ['suspected', 'drunk'])
+        // ========== FIX: Drunk detections dari IndikasiSiswa ==========
+        $drunkDetections = IndikasiSiswa::whereHas('absensi', function ($q) use ($today) {
+                $q->whereDate('tanggal', $today);
+            })
+            ->where('final_decision', 'DRUNK INDICATION')
             ->count();
         
         // Active classes
-        $activeClasses = Classes::where('is_active', true)->count();
+        $activeClasses = Kelas::count(); // Fix: tidak ada is_active
 
         return [
-            Stat::make('Total Siswa Aktif', $totalStudents)
-                ->description($activeClasses . ' kelas aktif')
+            Stat::make('Total Siswa', $totalStudents)
+                ->description($activeClasses . ' kelas')
                 ->descriptionIcon('heroicon-m-academic-cap')
                 ->color('success')
                 ->chart([7, 12, 15, 18, 22, 25, $totalStudents]),
@@ -57,10 +65,10 @@ class StatsOverviewWidget extends BaseWidget
                 ->color($attendanceRate >= 80 ? 'success' : ($attendanceRate >= 60 ? 'warning' : 'danger'))
                 ->chart([$todayAbsent, $todayLate, $todayPresent]),
             
-            Stat::make('Terlambat Hari Ini', $todayLate)
-                ->description('Dari ' . $todayAttendance . ' yang hadir')
-                ->descriptionIcon('heroicon-m-clock')
-                ->color($todayLate > 5 ? 'warning' : 'success'),
+            Stat::make('Tidak Hadir', $todayAbsent)
+                ->description('Dari ' . $totalStudents . ' siswa')
+                ->descriptionIcon('heroicon-m-user-minus')
+                ->color($todayAbsent > 10 ? 'danger' : 'warning'),
             
             Stat::make('Deteksi Mabuk', $drunkDetections)
                 ->description($drunkDetections > 0 ? 'Perlu tindakan segera!' : 'Tidak ada deteksi')

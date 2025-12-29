@@ -106,4 +106,13 @@ class Kelas extends Model
                      ->orderBy('jurusan')
                      ->orderBy('urutan');
     }
+
+    /**
+     * ACCESSOR BARU: Menggabungkan Tingkat + Jurusan + Urutan
+     * Ini memungkinkan kita memanggil $kelas->nama_kelas
+     */
+    public function getNamaKelasAttribute()
+    {
+        return "{$this->tingkat} {$this->jurusan} {$this->urutan}";
+    }
 }

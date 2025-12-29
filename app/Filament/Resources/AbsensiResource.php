@@ -5,6 +5,7 @@ namespace App\Filament\Resources;
 use App\Filament\Resources\AbsensiResource\Pages;
 use App\Models\Absensi;
 use Filament\Forms;
+use Filament\Forms\Get;
 use Filament\Forms\Form;
 use Filament\Resources\Resource;
 use Filament\Tables;
@@ -72,7 +73,8 @@ class AbsensiResource extends Resource
                                 'ALPA' => 'Tanpa Keterangan',
                             ])
                             ->default('HADIR')
-                            ->required(),
+                            ->required()
+                            ->live(),
                     ])
                     ->columns(2),
                 
@@ -81,14 +83,16 @@ class AbsensiResource extends Resource
                         Forms\Components\DateTimePicker::make('jam_masuk')
                             ->label('Jam Masuk')
                             ->displayFormat('d/m/Y H:i')
-                            ->seconds(false),
+                            ->seconds(false)
+                            ->required(fn (Get $get) => $get('status') === 'HADIR'),
                         
                         Forms\Components\DateTimePicker::make('jam_keluar')
                             ->label('Jam Keluar')
                             ->displayFormat('d/m/Y H:i')
                             ->seconds(false),
                     ])
-                    ->columns(2),
+                    ->columns(2)
+                    ->visible(fn (Get $get) => $get('status') === 'HADIR'),
             ]);
     }
 

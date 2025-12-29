@@ -1,9 +1,7 @@
 <?php
-// app/Jobs/SendWhatsAppNotificationJob.php
 
 namespace App\Jobs;
 
-use App\Models\Notification;
 use App\Services\WhatsAppService;
 use Illuminate\Bus\Queueable;
 use Illuminate\Contracts\Queue\ShouldQueue;
@@ -16,16 +14,19 @@ class SendWhatsAppNotificationJob implements ShouldQueue
 {
     use Dispatchable, InteractsWithQueue, Queueable, SerializesModels;
 
-    public $notification;
-    public $tries = 3;
-    public $backoff = [60, 120, 300]; // Retry after 1, 2, 5 minutes
+    // Kita ganti properti model dengan variabel biasa
+    protected $phoneNumber;
+    protected $message;
+
+    public $tries = 3; // Coba 3 kali jika gagal
 
     /**
-     * Create a new job instance.
+     * Terima nomor dan pesan langsung di constructor
      */
-    public function __construct(Notification $notification)
+    public function __construct(string $phoneNumber, string $message)
     {
-        $this->notification = $notification;
+        $this->phoneNumber = $phoneNumber;
+        $this->message = $message;
     }
 
     /**
@@ -33,76 +34,26 @@ class SendWhatsAppNotificationJob implements ShouldQueue
      */
     public function handle(WhatsAppService $whatsappService): void
     {
-        // Check if WhatsApp is enabled
-        if (!config('services.whatsapp.enabled')) {
-            Log::info('WhatsApp notifications disabled');
-            return;
-        }
-
-        // Check if already sent
-        if ($this->notification->status === 'sent') {
-            Log::info('Notification already sent', ['id' => $this->notification->id]);
-            return;
-        }
-
         try {
-            // Send message
+            // Langsung kirim tanpa cek database
             $result = $whatsappService->sendMessage(
-                $this->notification->recipient_phone,
-                $this->notification->message
+                $this->phoneNumber,
+                $this->message
             );
 
             if ($result['success']) {
-                // Update notification status
-                $this->notification->update([
-                    'status' => 'sent',
-                    'sent_at' => now(),
-                    'whatsapp_message_id' => $result['message_id'] ?? null,
-                    'whatsapp_response' => json_encode($result['response'] ?? []),
-                ]);
-
-                Log::info('WhatsApp notification sent successfully', [
-                    'notification_id' => $this->notification->id,
-                    'message_id' => $result['message_id'] ?? null,
-                ]);
+                // Karena tidak ada tabel, kita hanya bisa catat di Log file
+                Log::info("WA Terkirim ke {$this->phoneNumber}");
             } else {
-                throw new \Exception($result['error'] ?? 'Unknown error');
+                // Jika gagal, lempar error agar Job mengulangi (retry)
+                throw new \Exception($result['error'] ?? 'Gagal kirim');
             }
 
         } catch (\Exception $e) {
-            Log::error('Failed to send WhatsApp notification', [
-                'notification_id' => $this->notification->id,
-                'error' => $e->getMessage(),
-                'attempt' => $this->attempts(),
-            ]);
-
-            // Update notification
-            $this->notification->update([
-                'status' => 'failed',
-                'whatsapp_response' => $e->getMessage(),
-                'retry_count' => $this->notification->retry_count + 1,
-            ]);
-
-            // Retry if not max attempts
-            if ($this->attempts() < $this->tries) {
-                $this->release($this->backoff[$this->attempts() - 1] ?? 300);
-            }
+            Log::error("Gagal kirim WA ke {$this->phoneNumber}: " . $e->getMessage());
+            
+            // Lempar error lagi agar masuk mekanisme 'retry' Laravel
+            throw $e;
         }
-    }
-
-    /**
-     * Handle a job failure.
-     */
-    public function failed(\Throwable $exception): void
-    {
-        Log::error('WhatsApp notification job failed permanently', [
-            'notification_id' => $this->notification->id,
-            'error' => $exception->getMessage(),
-        ]);
-
-        $this->notification->update([
-            'status' => 'failed',
-            'whatsapp_response' => 'Job failed after ' . $this->tries . ' attempts: ' . $exception->getMessage(),
-        ]);
     }
 }

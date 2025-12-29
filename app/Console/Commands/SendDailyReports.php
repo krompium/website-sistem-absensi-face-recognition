@@ -1,11 +1,10 @@
 <?php
-// app/Console/Commands/SendDailyReports.php
 
 namespace App\Console\Commands;
 
-use App\Models\Student;
-use App\Models\Attendance;
-use App\Models\Notification;
+use App\Models\Siswa;
+use App\Models\Absensi;
+// use App\Models\Notification; // <-- HAPUS INI
 use App\Jobs\SendWhatsAppNotificationJob;
 use Illuminate\Console\Command;
 use Carbon\Carbon;
@@ -13,79 +12,53 @@ use Carbon\Carbon;
 class SendDailyReports extends Command
 {
     protected $signature = 'attendance:send-daily-reports';
-    protected $description = 'Send daily attendance reports to all parents';
+    protected $description = 'Kirim laporan harian (Mode Job Queue - Tanpa Tabel Log)';
 
     public function handle()
     {
-        $this->info('Sending daily attendance reports...');
+        $this->info('Memulai pengiriman laporan harian...');
 
         $today = Carbon::today();
-        $attendances = Attendance::with(['student'])
-            ->whereDate('date', $today)
+        
+        $attendances = Absensi::with(['siswa'])
+            ->whereDate('tanggal', $today)
             ->get();
 
         $sentCount = 0;
 
         foreach ($attendances as $attendance) {
-            $student = $attendance->student;
+            $student = $attendance->siswa;
 
-            // Create notification
-            $notification = Notification::create([
-                'student_id' => $student->id,
-                'type' => 'attendance',
-                'recipient_phone' => $student->parent_phone,
-                'recipient_name' => $student->parent_name,
-                'title' => 'Laporan Kehadiran Harian',
-                'message' => $this->buildDailyReportMessage($student, $attendance),
-                'status' => 'pending',
-            ]);
+            if (!$student || empty($student->nomor_wali)) {
+                continue;
+            }
 
-            // Dispatch job
-            SendWhatsAppNotificationJob::dispatch($notification);
+            // Generate pesan
+            $messageContent = $this->buildDailyReportMessage($student, $attendance);
+
+            // ==================================================
+            // PERUBAHAN DISINI:
+            // Langsung Dispatch Job dengan (Nomor HP, Pesan)
+            // Tidak perlu create data di tabel Notification dulu
+            // ==================================================
+            SendWhatsAppNotificationJob::dispatch(
+                $student->nomor_wali, 
+                $messageContent
+            );
 
             $sentCount++;
         }
 
-        $this->info("Daily reports queued: {$sentCount}");
+        $this->info("Antrian laporan berhasil dibuat: {$sentCount}");
 
         return Command::SUCCESS;
     }
 
     protected function buildDailyReportMessage($student, $attendance): string
     {
-        $schoolName = config('app.school_name', 'Sekolah');
-        $date = $attendance->date->format('d/m/Y');
-        
-        $checkIn = $attendance->check_in_time ? $attendance->check_in_time->format('H:i') : '-';
-        $checkOut = $attendance->check_out_time ? $attendance->check_out_time->format('H:i') : '-';
-
-        $status = match($attendance->status) {
-            'present' => '✅ Hadir',
-            'late' => '⏰ Terlambat',
-            'absent' => '❌ Tidak Hadir',
-            'sick' => '🤒 Sakit',
-            'permission' => '📝 Izin',
-            default => 'Unknown',
-        };
-
-        $message = "*LAPORAN KEHADIRAN HARIAN*\n\n";
-        $message .= "Kepada Yth. *{$student->parent_name}*,\n\n";
-        $message .= "📝 Nama: *{$student->name}*\n";
-        $message .= "🎓 NIS: *{$student->nis}*\n";
-        $message .= "🏫 Kelas: *{$student->class->name}*\n\n";
-        $message .= "📅 Tanggal: {$date}\n";
-        $message .= "Status: {$status}\n";
-        $message .= "🕐 Jam Masuk: {$checkIn}\n";
-        $message .= "🕐 Jam Pulang: {$checkOut}\n";
-
-        if ($attendance->temperature) {
-            $tempIcon = $attendance->temperature >= 37.5 ? '🌡️🔴' : '🌡️';
-            $message .= "{$tempIcon} Suhu: {$attendance->temperature}°C\n";
-        }
-
-        $message .= "\nTerima kasih,\n";
-        $message .= "*{$schoolName}*";
-
-        return $message;
+        // ... (Kode build message sama persis seperti sebelumnya) ...
+        // Copy paste fungsi buildDailyReportMessage dari jawaban sebelumnya
+        return app(\App\Services\WhatsAppService::class)
+               ->buildDailyReportMessage($student, $attendance);
     }
 }

@@ -14,7 +14,6 @@ class Kernel extends ConsoleKernel
     protected function schedule(Schedule $schedule): void
     {
         // Check daily attendance at 10:00 AM
-        // Send notification to parents of absent students
         $schedule->command('attendance:check-daily')
             ->dailyAt('10:00')
             ->emailOutputOnFailure(config('app.admin_email'));
@@ -49,11 +48,13 @@ class Kernel extends ConsoleKernel
             ->sundays()
             ->at('03:00');
 
-        // Generate weekly reports every Monday at 8:00 AM
-        $schedule->call(function () {
-            // TODO: Implement weekly report generation
-            \Log::info('Weekly report generation scheduled');
-        })->weeklyOn(1, '08:00');
+        // ==========================================
+        // UPDATE BARU: JADWAL LAPORAN MINGGUAN
+        // ==========================================
+        $schedule->command('attendance:send-weekly-reports')
+            ->weeklyOn(5, '15:00') // 5 = Jumat, 15:00 = Jam 3 Sore
+            ->timezone('Asia/Jakarta')
+            ->emailOutputOnFailure(config('app.admin_email'));
     }
 
     /**

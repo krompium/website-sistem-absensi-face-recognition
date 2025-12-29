@@ -189,7 +189,7 @@ class Reports extends Page implements HasForms
 
         // Count drunk detections
         $drunkDetections = $absensis->filter(function ($absensi) {
-            return $absensi->indikasiSiswa()->where('final_decision', 'MABUK')->exists();
+            return $absensi->indikasi()->where('final_decision', 'DRUNK INDICATION')->exists();
         })->count();
 
         // Calculate late attendances (jam_masuk after 07:30)

@@ -1,5 +1,4 @@
 <?php
-// app/Services/WhatsAppService.php
 
 namespace App\Services;
 
@@ -20,19 +19,13 @@ class WhatsAppService
             'verify' => false, // For development only
         ]);
         
-        // You can use Fonnte, Wablas, or Twilio
-        // Example using Fonnte
+        // Konfigurasi Fonnte
         $this->apiUrl = config('services.whatsapp.api_url', 'https://api.fonnte.com/send');
         $this->apiKey = config('services.whatsapp.api_key');
     }
 
     /**
      * Send WhatsApp message
-     * 
-     * @param string $phone - Format: 628xxxxxxxxxx
-     * @param string $message
-     * @param array $options - Additional options (image, file, etc)
-     * @return array
      */
     public function sendMessage(string $phone, string $message, array $options = []): array
     {
@@ -95,11 +88,7 @@ class WhatsAppService
     public function sendDrunkDetectionAlert($student, $detection): array
     {
         $message = $this->buildDrunkDetectionMessage($student, $detection);
-        
-        return $this->sendMessage(
-            $student->parent_phone,
-            $message
-        );
+        return $this->sendMessage($student->nomor_wali, $message); 
     }
 
     /**
@@ -108,11 +97,7 @@ class WhatsAppService
     public function sendLateNotification($student, $attendance): array
     {
         $message = $this->buildLateMessage($student, $attendance);
-        
-        return $this->sendMessage(
-            $student->parent_phone,
-            $message
-        );
+        return $this->sendMessage($student->nomor_wali, $message);
     }
 
     /**
@@ -121,22 +106,27 @@ class WhatsAppService
     public function sendAbsentNotification($student, $date): array
     {
         $message = $this->buildAbsentMessage($student, $date);
-        
-        return $this->sendMessage(
-            $student->parent_phone,
-            $message
-        );
+        return $this->sendMessage($student->nomor_wali, $message);
     }
 
     /**
-     * Send daily attendance report to parent
+     * Send daily attendance report
      */
     public function sendDailyReport($student, $attendance): array
     {
         $message = $this->buildDailyReportMessage($student, $attendance);
+        return $this->sendMessage($student->nomor_wali, $message);
+    }
+
+    /**
+     * BARU: Kirim Laporan Mingguan
+     */
+    public function sendWeeklyReport($student, $startDate, $endDate, $summary, $details): array
+    {
+        $message = $this->buildWeeklyReportMessage($student, $startDate, $endDate, $summary, $details);
         
         return $this->sendMessage(
-            $student->parent_phone,
+            $student->nomor_wali,
             $message
         );
     }
@@ -157,11 +147,13 @@ class WhatsAppService
         };
 
         $message = "*PERINGATAN PENTING*\n\n";
-        $message .= "Kepada Yth. *{$student->parent_name}*,\n\n";
+        $message .= "Kepada Yth. Wali Murid,\n\n";
         $message .= "Kami menginformasikan bahwa putra/putri Anda:\n\n";
-        $message .= "📝 Nama: *{$student->name}*\n";
-        $message .= "🎓 NIS: *{$student->nis}*\n";
-        $message .= "🏫 Kelas: *{$student->class->name}*\n\n";
+        $message .= "📝 Nama: *{$student->nama_siswa}*\n";
+        $message .= "🎓 Kode: *{$student->kode_siswa}*\n";
+        // Cek relasi kelas jika ada
+        $kelas = $student->kelas ? $student->kelas->nama_kelas : '-';
+        $message .= "🏫 Kelas: *{$kelas}*\n\n";
         $message .= "Status: {$status}\n";
         $message .= "📅 Tanggal: {$date}\n";
         $message .= "🕐 Waktu: {$time}\n";
@@ -177,7 +169,6 @@ class WhatsAppService
         $message .= "\n⚠️ *Mohon segera menghubungi pihak sekolah untuk tindak lanjut.*\n\n";
         $message .= "Terima kasih,\n";
         $message .= "*{$schoolName}*\n";
-        $message .= "📞 " . config('app.school_phone', '-');
 
         return $message;
     }
@@ -188,15 +179,14 @@ class WhatsAppService
     protected function buildLateMessage($student, $attendance): string
     {
         $schoolName = config('app.school_name', 'Sekolah');
-        $date = $attendance->date->format('d/m/Y');
-        $time = $attendance->check_in_time->format('H:i');
+        $date = $attendance->tanggal->format('d/m/Y');
+        $time = $attendance->jam_masuk->format('H:i');
 
         $message = "*INFORMASI KETERLAMBATAN*\n\n";
-        $message .= "Kepada Yth. *{$student->parent_name}*,\n\n";
+        $message .= "Kepada Yth. Wali Murid,\n\n";
         $message .= "Kami informasikan bahwa:\n\n";
-        $message .= "📝 Nama: *{$student->name}*\n";
-        $message .= "🎓 NIS: *{$student->nis}*\n";
-        $message .= "🏫 Kelas: *{$student->class->name}*\n\n";
+        $message .= "📝 Nama: *{$student->nama_siswa}*\n";
+        $message .= "🎓 Kode: *{$student->kode_siswa}*\n";
         $message .= "⏰ *Terlambat masuk sekolah*\n";
         $message .= "📅 Tanggal: {$date}\n";
         $message .= "🕐 Jam Masuk: {$time}\n\n";
@@ -216,11 +206,10 @@ class WhatsAppService
         $dateFormatted = $date->format('d/m/Y');
 
         $message = "*INFORMASI KETIDAKHADIRAN*\n\n";
-        $message .= "Kepada Yth. *{$student->parent_name}*,\n\n";
+        $message .= "Kepada Yth. Wali Murid,\n\n";
         $message .= "Kami informasikan bahwa:\n\n";
-        $message .= "📝 Nama: *{$student->name}*\n";
-        $message .= "🎓 NIS: *{$student->nis}*\n";
-        $message .= "🏫 Kelas: *{$student->class->name}*\n\n";
+        $message .= "📝 Nama: *{$student->nama_siswa}*\n";
+        $message .= "🎓 Kode: *{$student->kode_siswa}*\n";
         $message .= "❌ *Tidak hadir* pada:\n";
         $message .= "📅 Tanggal: {$dateFormatted}\n\n";
         $message .= "Jika berhalangan hadir, mohon menghubungi pihak sekolah.\n\n";
@@ -233,36 +222,76 @@ class WhatsAppService
     /**
      * Build daily report message
      */
-    protected function buildDailyReportMessage($student, $attendance): string
+    public function buildDailyReportMessage($student, $attendance): string
     {
         $schoolName = config('app.school_name', 'Sekolah');
-        $date = $attendance->date->format('d/m/Y');
+        $date = $attendance->tanggal->format('d/m/Y');
         
-        $checkIn = $attendance->check_in_time ? $attendance->check_in_time->format('H:i') : '-';
-        $checkOut = $attendance->check_out_time ? $attendance->check_out_time->format('H:i') : '-';
+        $checkIn = $attendance->jam_masuk ? $attendance->jam_masuk->format('H:i') : '-';
+        $checkOut = $attendance->jam_keluar ? $attendance->jam_keluar->format('H:i') : '-';
 
         $status = match($attendance->status) {
-            'present' => '✅ Hadir',
-            'late' => '⏰ Terlambat',
-            'absent' => '❌ Tidak Hadir',
-            'sick' => '🤒 Sakit',
-            'permission' => '📝 Izin',
+            'HADIR' => '✅ Hadir',
+            'IZIN' => '📝 Izin',
+            'SAKIT' => '🤒 Sakit',
+            'ALPA' => '❌ Tidak Hadir',
             default => 'Unknown',
         };
 
         $message = "*LAPORAN KEHADIRAN HARIAN*\n\n";
-        $message .= "Kepada Yth. *{$student->parent_name}*,\n\n";
-        $message .= "📝 Nama: *{$student->name}*\n";
-        $message .= "🎓 NIS: *{$student->nis}*\n";
-        $message .= "🏫 Kelas: *{$student->class->name}*\n\n";
+        $message .= "Kepada Yth. Wali Murid,\n\n";
+        $message .= "📝 Nama: *{$student->nama_siswa}*\n";
+        $message .= "🎓 Kode: *{$student->kode_siswa}*\n";
         $message .= "📅 Tanggal: {$date}\n";
         $message .= "Status: {$status}\n";
         $message .= "🕐 Jam Masuk: {$checkIn}\n";
         $message .= "🕐 Jam Pulang: {$checkOut}\n";
 
-        if ($attendance->temperature) {
-            $tempIcon = $attendance->temperature >= 37.5 ? '🌡️🔴' : '🌡️';
-            $message .= "{$tempIcon} Suhu: {$attendance->temperature}°C\n";
+        $message .= "\nTerima kasih,\n";
+        $message .= "*{$schoolName}*";
+
+        return $message;
+    }
+
+    /**
+     * BARU: Build Weekly Report Message
+     */
+    public function buildWeeklyReportMessage($student, $startDate, $endDate, $summary, $details): string
+    {
+        $schoolName = config('app.school_name', 'Sekolah');
+        $startStr = $startDate->translatedFormat('d F');
+        $endStr = $endDate->translatedFormat('d F Y');
+
+        $message = "*LAPORAN ABSENSI MINGGUAN*\n";
+        $message .= "🗓 Periode: {$startStr} s.d {$endStr}\n\n";
+        $message .= "Kepada Yth. Wali Murid,\n";
+        $message .= "Berikut rekap kehadiran siswa:\n\n";
+        $message .= "📝 Nama: *{$student->nama_siswa}*\n";
+        $message .= "🎓 Kode: *{$student->kode_siswa}*\n";
+        if ($student->kelas) {
+             $message .= "🏫 Kelas: *{$student->kelas->nama_kelas}*\n\n";
+        } else {
+             $message .= "\n";
+        }
+
+        $message .= "*Ringkasan:*\n";
+        $message .= "✅ Hadir: {$summary['hadir']}\n";
+        $message .= "🤒 Sakit: {$summary['sakit']}\n";
+        $message .= "📝 Izin: {$summary['izin']}\n";
+        $message .= "❌ Alpha: {$summary['alpa']}\n\n";
+
+        $message .= "*Rincian Harian:*\n";
+        foreach ($details as $detail) {
+            $icon = match($detail['status']) {
+                'HADIR' => '✅',
+                'SAKIT' => '🤒',
+                'IZIN'  => '📝',
+                'ALPA'  => '❌',
+                default => '❓',
+            };
+            
+            $jam = $detail['jam_masuk'] ? $detail['jam_masuk']->format('H:i') : '-';
+            $message .= "• {$detail['hari']}: {$icon} {$detail['status_label']} ({$jam})\n";
         }
 
         $message .= "\nTerima kasih,\n";
@@ -298,20 +327,22 @@ class WhatsAppService
     public function checkStatus(): array
     {
         try {
-            $response = $this->client->get(
-                str_replace('/send', '/status', $this->apiUrl),
-                [
-                    'headers' => [
-                        'Authorization' => $this->apiKey,
-                    ],
-                ]
-            );
+            // Ganti endpoint '/send' menjadi '/device'
+            $url = str_replace('/send', '/device', $this->apiUrl);
+
+            // Gunakan method POST (bukan GET) sesuai dokumentasi Fonnte
+            $response = $this->client->post($url, [
+                'headers' => [
+                    'Authorization' => $this->apiKey,
+                ],
+            ]);
 
             $result = json_decode($response->getBody(), true);
 
             return [
                 'success' => true,
-                'status' => $result['status'] ?? 'unknown',
+                // Ambil status dari 'device_status' (connect/disconnect)
+                'status' => $result['device_status'] ?? 'unknown',
                 'data' => $result,
             ];
 

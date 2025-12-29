@@ -248,7 +248,7 @@
                                 {{-- Indikasi Mabuk --}}
                                 <td class="px-6 py-4 whitespace-nowrap">
                                     @php
-                                        $hasIndikasi = $absensi->indikasiSiswa()->where('final_decision', 'MABUK')->exists();
+                                        $hasIndikasi = $absensi->adaIndikasiMabuk();
                                     @endphp
                                     @if($hasIndikasi)
                                         <span class="px-2 py-1 rounded bg-red-100 text-red-800 text-xs font-bold">

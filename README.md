@@ -1,32 +1,36 @@
 # Website Sistem Absensi Face Recognition
 
-Sistem absensi berbasis web dengan teknologi face recognition menggunakan Laravel dan Python. 
+Sistem absensi berbasis web dengan teknologi face recognition menggunakan Laravel dan Python.  Aplikasi ini memungkinkan pencatatan kehadiran siswa menggunakan pengenalan wajah dengan teknologi DeepFace.
 
 ## 📋 Deskripsi
 
-Website ini adalah sistem absensi yang memanfaatkan teknologi pengenalan wajah (face recognition) untuk mencatat kehadiran.  Sistem ini dibangun menggunakan framework Laravel untuk backend dan Python untuk pemrosesan face recognition.
+Website ini adalah sistem absensi yang memanfaatkan teknologi pengenalan wajah (face recognition) untuk mencatat kehadiran siswa.  Sistem ini terdiri dari: 
+- **Backend Laravel** - Mengelola data siswa, kelas, guru, dan absensi
+- **Python Flask API** - Melakukan pemrosesan face recognition menggunakan DeepFace
+- **Frontend** - Interface web dengan Tailwind CSS
 
 ## 🛠️ Teknologi yang Digunakan
 
-- **PHP** (Laravel Framework)
+- **PHP** (Laravel 11.x)
 - **Blade** (Template Engine)
-- **Python** (Face Recognition)
+- **Python 3.x** (Flask + DeepFace untuk Face Recognition)
 - **MySQL** (Database)
-- **CSS** & **JavaScript**
+- **Tailwind CSS** & **Vite** (Frontend)
+- **JavaScript**
 
 ## 📦 Prasyarat
 
-Sebelum memulai, pastikan Anda telah menginstal: 
+Pastikan Anda telah menginstal: 
 
-- PHP >= 8.0
-- Composer
-- MySQL/MariaDB
-- Python >= 3.7
-- pip (Python package manager)
-- Git
-- Web Server (Apache/Nginx) atau bisa menggunakan Laravel built-in server
+- **PHP** >= 8.2
+- **Composer**
+- **MySQL/MariaDB** >= 8.0
+- **Python** >= 3.8
+- **pip** (Python package manager)
+- **Node.js** >= 18.x & **npm**
+- **Git**
 
-## 🚀 Cara Instalasi
+## 🚀 Cara Instalasi Step-by-Step
 
 ### Step 1: Clone Repository
 
@@ -41,7 +45,13 @@ cd website-sistem-absensi-face-recognition
 composer install
 ```
 
-### Step 3: Konfigurasi Environment
+### Step 3: Install Dependencies Node.js (npm)
+
+```bash
+npm install
+```
+
+### Step 4: Konfigurasi Environment
 
 ```bash
 # Copy file .env.example menjadi .env
@@ -51,9 +61,36 @@ cp .env.example .env
 php artisan key:generate
 ```
 
-### Step 4: Konfigurasi Database
+### Step 5: Konfigurasi Database
 
-Buka file `.env` dan sesuaikan konfigurasi database:
+**Pilihan A: Import Database yang Sudah Ada**
+
+Ada file database `absensi_face_db` di root project. Anda bisa import langsung:
+
+```bash
+# Buat database baru
+mysql -u root -p -e "CREATE DATABASE absensi_face_recognition;"
+
+# Import database
+mysql -u root -p absensi_face_recognition < absensi_face_db
+```
+
+**Pilihan B: Menggunakan Migration**
+
+Atau buat database baru dan jalankan migration:
+
+```bash
+# Buat database
+mysql -u root -p -e "CREATE DATABASE absensi_face_recognition;"
+
+# Jalankan migration
+php artisan migrate
+
+# (Opsional) Jalankan seeder untuk data dummy
+php artisan db:seed
+```
+
+Kemudian edit file `.env` sesuai konfigurasi database Anda: 
 
 ```env
 DB_CONNECTION=mysql
@@ -61,33 +98,28 @@ DB_HOST=127.0.0.1
 DB_PORT=3306
 DB_DATABASE=absensi_face_recognition
 DB_USERNAME=root
-DB_PASSWORD=
+DB_PASSWORD=your_password
 ```
 
-### Step 5: Buat Database
-
-Buat database baru di MySQL dengan nama sesuai yang Anda set di `.env`:
-
-```sql
-CREATE DATABASE absensi_face_recognition;
-```
-
-### Step 6: Migrasi Database
+### Step 6: Konfigurasi Storage Laravel
 
 ```bash
-php artisan migrate
+# Buat symbolic link untuk storage
+php artisan storage:link
+
+# Set permission (Linux/Mac)
+chmod -R 775 storage
+chmod -R 775 bootstrap/cache
 ```
 
-Jika ada seeder, jalankan juga:
+### Step 7: Install Dependencies Python untuk Face Recognition
+
+Masuk ke folder Python dan install dependencies:
 
 ```bash
-php artisan db:seed
-```
+cd resources/python
 
-### Step 7: Install Dependencies Python
-
-```bash
-# Buat virtual environment (opsional tapi direkomendasikan)
+# Buat virtual environment (sangat direkomendasikan)
 python -m venv venv
 
 # Aktivasi virtual environment
@@ -96,87 +128,128 @@ venv\Scripts\activate
 # Untuk Linux/Mac:
 source venv/bin/activate
 
-# Install dependencies Python
+# Install dependencies
 pip install -r requirements.txt
+
+# Kembali ke root project
+cd ../.. 
 ```
 
-> **Catatan:** Jika file `requirements.txt` tidak ada, install package berikut secara manual:
-> ```bash
-> pip install face-recognition opencv-python numpy
-> ```
+> **Catatan:** Instalasi DeepFace dan OpenCV mungkin memakan waktu beberapa menit
 
-### Step 8: Konfigurasi Storage Laravel
+### Step 8: Build Frontend Assets
 
 ```bash
-# Buat symbolic link untuk storage
-php artisan storage:link
+# Build untuk production
+npm run build
+
+# ATAU jalankan development server (dengan hot reload)
+npm run dev
 ```
 
-### Step 9: Set Permission (untuk Linux/Mac)
+### Step 9: Jalankan Aplikasi
 
-```bash
-chmod -R 775 storage
-chmod -R 775 bootstrap/cache
-```
+Anda perlu menjalankan **3 service** secara bersamaan:
 
-### Step 10: Jalankan Aplikasi
-
+**Terminal 1 - Laravel Server:**
 ```bash
 php artisan serve
 ```
 
-Website akan berjalan di `http://localhost:8000`
+**Terminal 2 - Python Flask API (Face Recognition):**
+```bash
+cd resources/python
+# Aktivasi virtual environment jika belum
+source venv/bin/activate  # Linux/Mac
+# ATAU
+venv\Scripts\activate  # Windows
 
-## 🎯 Cara Penggunaan
+# Jalankan Flask
+python app.py
+```
 
-### Akses Website
+**Terminal 3 - Vite Dev Server (opsional, jika development):**
+```bash
+npm run dev
+```
+
+> **Tip:** Anda bisa menggunakan `concurrently` yang sudah ada di package.json untuk menjalankan beberapa command sekaligus
+
+### Step 10: Akses Aplikasi
 
 Buka browser dan akses: 
 ```
 http://localhost:8000
 ```
 
-### Login ke Sistem
+Python Flask API akan berjalan di: 
+```
+http://localhost:5000
+```
 
-Gunakan kredensial default (jika sudah ada seeder):
-- **Email:** admin@admin.com
-- **Password:** password
+## 🎯 Cara Penggunaan
 
-### Menggunakan Fitur Face Recognition
+### 1. Login ke Sistem
 
-1. **Registrasi Wajah:**
-   - Masuk ke menu Registrasi/Tambah User
-   - Upload foto wajah atau gunakan webcam
-   - Sistem akan menyimpan data wajah ke database
+Gunakan kredensial default (jika menggunakan seeder atau database import):
+- Cek tabel `users` di database Anda untuk kredensial login
 
-2. **Absensi:**
-   - Akses halaman absensi
-   - Izinkan akses kamera
-   - Posisikan wajah di depan kamera
-   - Sistem akan mengenali dan mencatat kehadiran
+### 2. Kelola Data Master
 
-3. **Lihat Laporan:**
-   - Akses menu Laporan/History
-   - Filter berdasarkan tanggal atau user
-   - Export data jika diperlukan
+- **Kelas:** Tambah/edit data kelas (contoh: "XIIRPL", "XTKJ1")
+- **Siswa:** Tambah data siswa dengan kode siswa, nama, kelas, jenis kelamin, dll
+- **Guru:** Kelola data guru dan assign ke kelas
 
-## 📁 Struktur Project
+### 3. Registrasi Wajah Siswa
+
+1.  Masuk ke menu **Training/Registrasi Wajah**
+2. Pilih siswa
+3. Upload foto wajah atau gunakan webcam
+4. Sistem akan menyimpan data wajah menggunakan API Flask
+5. Foto akan disimpan di folder `resources/python/known_faces/`
+
+### 4. Absensi dengan Face Recognition
+
+1. Akses halaman **Absensi**
+2. Izinkan akses kamera browser
+3. Siswa posisikan wajah di depan kamera
+4. Sistem akan: 
+   - Mendeteksi wajah
+   - Mengirim ke Python API untuk pengenalan
+   - Mencatat kehadiran (jam masuk/keluar)
+   - Mendeteksi indikasi mabuk (opsional)
+
+### 5. Lihat Laporan & Rekap
+
+- Akses menu **Laporan/Rekap Absensi**
+- Filter berdasarkan tanggal, kelas, atau siswa
+- Export data ke Excel/PDF (jika tersedia)
+
+## 📁 Struktur Project Penting
 
 ```
 website-sistem-absensi-face-recognition/
-├── app/                    # Aplikasi Laravel
-├── bootstrap/              # Bootstrap Laravel
-├── config/                 # Konfigurasi
-├── database/              # Migrations & Seeders
-├── public/                # File publik (CSS, JS, Images)
-├── resources/             # Views (Blade templates)
-├── routes/                # Route definitions
-├── storage/               # File storage
-├── vendor/                # Dependencies PHP
-├── . env                   # Environment variables
-├── composer.json          # PHP dependencies
-├── requirements.txt       # Python dependencies
-└── README.md             # Dokumentasi
+├── app/                          # Laravel application
+│   ├── Models/                   # Model (User, Siswa, Kelas, Absensi, dll)
+│   └── Http/Controllers/         # Controllers
+├── database/
+│   ├── migrations/               # Database migrations
+│   └── seeders/                  # Database seeders
+├── resources/
+│   ├── python/                   # 🔥 Python Flask API
+│   │   ├── app.py               # Main Flask application
+│   │   ├── requirements.txt     # Python dependencies
+│   │   ├── known_faces/         # Folder penyimpanan foto training
+│   │   └── face_database.json   # Database face encoding
+│   └── views/                    # Blade templates
+├── public/                       # Public assets
+├── routes/
+│   └── web.php                  # Web routes
+├── . env.example                 # Environment template
+├── absensi_face_db              # 🔥 Database SQL dump
+├── composer.json                # PHP dependencies
+├── package.json                 # Node.js dependencies
+└── vite.config.js              # Vite configuration
 ```
 
 ## 🔧 Troubleshooting
@@ -184,22 +257,74 @@ website-sistem-absensi-face-recognition/
 ### Error:  "Class not found"
 ```bash
 composer dump-autoload
+php artisan clear
+php artisan config:clear
 ```
 
 ### Error: "Permission denied" pada storage
 ```bash
 chmod -R 775 storage bootstrap/cache
+sudo chown -R www-data: www-data storage bootstrap/cache  # Linux
 ```
 
-### Error Python module tidak ditemukan
+### Error: Python module tidak ditemukan
 ```bash
+cd resources/python
 pip install -r requirements.txt --upgrade
 ```
 
-### Error kamera tidak terdeteksi
+### Error: Face recognition tidak bekerja
+
+1. Pastikan Python Flask API berjalan di `http://localhost:5000`
+2. Cek console browser untuk error CORS
+3. Pastikan folder `resources/python/known_faces/` ada dan writable
+4. Cek apakah ada data di `face_database.json`
+
+### Error:  Kamera tidak terdeteksi
+
 - Pastikan browser memiliki izin akses kamera
-- Gunakan HTTPS atau localhost
+- Gunakan HTTPS atau localhost (browser security requirement)
 - Cek apakah kamera sedang digunakan aplikasi lain
+- Coba browser lain (Chrome/Firefox recommended)
+
+### Error: npm run build gagal
+
+```bash
+# Clear cache
+rm -rf node_modules package-lock.json
+npm cache clean --force
+npm install
+npm run build
+```
+
+### Error: DeepFace instalasi gagal (Windows)
+
+Jika ada error saat install DeepFace di Windows:
+```bash
+# Install Visual C++ Build Tools dulu
+# Download dari: https://visualstudio.microsoft.com/visual-cpp-build-tools/
+
+# Atau gunakan pre-built wheels
+pip install --upgrade pip
+pip install deepface --no-cache-dir
+```
+
+## 📊 Database Schema
+
+### Tabel Utama: 
+- **users** - Data guru dan administrator
+- **siswa** - Data siswa
+- **kelas** - Data kelas
+- **absensi** - Rekam absensi harian
+- **_indikasi_siswa** - Hasil deteksi indikasi dari AI
+- **_guru_kelas** - Relasi guru dengan kelas yang diajar
+
+## 🔌 API Endpoints (Python Flask)
+
+- `POST /api/train` - Upload dan training foto wajah
+- `POST /api/recognize` - Recognize wajah dari foto/video
+- `DELETE /api/delete/<name>` - Hapus data wajah
+- `GET /api/list` - List semua wajah yang terdaftar
 
 ## 🤝 Kontribusi
 
@@ -211,16 +336,35 @@ Kontribusi selalu diterima! Silakan:
 4. Push ke branch (`git push origin fitur-baru`)
 5. Buat Pull Request
 
+## 📝 Lisensi
+
+Project ini bersifat open source untuk keperluan edukasi. 
+
 ## 👤 Author
 
 **krompium**
-
 - GitHub: [@krompium](https://github.com/krompium)
+- Repository: [website-sistem-absensi-face-recognition](https://github.com/krompium/website-sistem-absensi-face-recognition)
 
-## 📞 Kontak & Support
+## 🆘 Support
 
-Jika ada pertanyaan atau menemukan bug, silakan buat [Issue](https://github.com/krompium/website-sistem-absensi-face-recognition/issues) di repository ini.
+Jika ada pertanyaan atau menemukan bug: 
+- Buat [Issue](https://github.com/krompium/website-sistem-absensi-face-recognition/issues)
+- Atau hubungi melalui GitHub
 
 ---
 
-⭐ Jangan lupa berikan star jika project ini bermanfaat! 
+⭐ **Jangan lupa berikan star jika project ini bermanfaat!**
+
+## 📸 Screenshot
+
+_(Anda bisa tambahkan screenshot aplikasi di sini)_
+
+## 🔄 Update Log
+
+- **v1.0** - Initial release dengan fitur face recognition dasar
+- Sistem absensi siswa
+- Deteksi indikasi mabuk
+- Multi-kelas dan guru
+
+---

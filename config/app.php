@@ -99,6 +99,13 @@ return [
 
     'key' => env('APP_KEY'),
 
+    /*
+    |--------------------------------------------------------------------------
+    | API Key for Python Integration
+    |--------------------------------------------------------------------------
+    */
+    'api_key' => env('API_KEY', null),
+
     'previous_keys' => [
         ...array_filter(
             explode(',', (string) env('APP_PREVIOUS_KEYS', ''))

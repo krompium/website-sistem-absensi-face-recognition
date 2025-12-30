@@ -154,4 +154,18 @@ class Siswa extends Model
               ->orWhere('nama_siswa', 'like', "%{$search}%");
         });
     }
+
+    // ========== GLOBAL SCOPES ==========
+    
+    protected static function booted()
+    {
+        static::addGlobalScope('guruAccess', function ($query) {
+            $user = auth()->user();
+            
+            if ($user && $user->isGuru()) {
+                $kelasIds = $user->kelasYangDiajar()->pluck('id_kelas');
+                $query->whereIn('id_kelas', $kelasIds);
+            }
+        });
+    }
 }

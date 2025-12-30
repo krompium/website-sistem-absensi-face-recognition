@@ -218,4 +218,18 @@ class Absensi extends Model
             $q->where('final_decision', 'DRUNK INDICATION');
         });
     }
+
+    // ========== GLOBAL SCOPES ==========
+    
+    protected static function booted()
+    {
+        static::addGlobalScope('guruAccess', function ($query) {
+            $user = auth()->user();
+            
+            if ($user && $user->isGuru()) {
+                $kelasIds = $user->kelasYangDiajar()->pluck('id_kelas');
+                $query->whereIn('id_kelas', $kelasIds);
+            }
+        });
+    }
 }

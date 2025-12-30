@@ -105,9 +105,17 @@
                     <button 
                         type="submit" 
                         class="group relative w-full flex justify-center py-2 px-4 border border-transparent text-sm font-medium rounded-md text-white bg-emerald-600 hover:bg-emerald-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-emerald-500 disabled:opacity-50 disabled:cursor-not-allowed"
-                        :disabled="!passwordsMatch && passwordConfirmation.length > 0">
+                        x-bind:disabled="!passwordsMatch || password.length < 8">
                         Daftar
                     </button>
+                    <p x-show="!passwordsMatch && passwordConfirmation.length > 0" 
+                       class="mt-2 text-sm text-red-600 text-center">
+                        ⚠️ Password tidak cocok. Mohon periksa kembali.
+                    </p>
+                    <p x-show="password.length > 0 && password.length < 8" 
+                       class="mt-2 text-sm text-red-600 text-center">
+                        ⚠️ Password minimal 8 karakter.
+                    </p>
                 </div>
 
                 <div class="text-center">

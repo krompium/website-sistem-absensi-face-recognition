@@ -161,8 +161,8 @@ class IndikasiSiswaResource extends Resource
 
     public static function getNavigationBadge(): ?string
     {
-        // Show count of drunk indications in guru's classes
-        $count = IndikasiSiswa::where('final_decision', 'DRUNK INDICATION')
+        // Use the model query which respects global scopes
+        $count = static::getModel()::where('final_decision', 'DRUNK INDICATION')
             ->whereHas('absensi', function ($query) {
                 $query->whereDate('tanggal', '>=', now()->subDays(7));
             })

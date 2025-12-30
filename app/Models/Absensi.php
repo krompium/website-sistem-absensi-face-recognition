@@ -227,7 +227,14 @@ class Absensi extends Model
             $user = auth()->user();
             
             if ($user && $user->isGuru()) {
-                $kelasIds = $user->kelasYangDiajar()->pluck('id_kelas');
+                // Use cached kelas IDs from request
+                $kelasIds = app('request')->get('_guru_kelas_ids');
+                
+                if ($kelasIds === null) {
+                    $kelasIds = $user->kelasYangDiajar()->pluck('id_kelas')->toArray();
+                    app('request')->attributes->set('_guru_kelas_ids', $kelasIds);
+                }
+                
                 $query->whereIn('id_kelas', $kelasIds);
             }
         });

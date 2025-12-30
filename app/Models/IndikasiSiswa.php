@@ -205,9 +205,20 @@ class IndikasiSiswa extends Model
             $user = auth()->user();
             
             if ($user && $user->isGuru()) {
-                $kelasIds = $user->kelasYangDiajar()->pluck('id_kelas');
-                $query->whereHas('absensi', function ($q) use ($kelasIds) {
-                    $q->whereIn('id_kelas', $kelasIds);
+                // Use cached kelas IDs from request
+                $kelasIds = app('request')->get('_guru_kelas_ids');
+                
+                if ($kelasIds === null) {
+                    $kelasIds = $user->kelasYangDiajar()->pluck('id_kelas')->toArray();
+                    app('request')->attributes->set('_guru_kelas_ids', $kelasIds);
+                }
+                
+                // Use exists instead of whereHas for better performance
+                $query->whereExists(function ($subquery) use ($kelasIds) {
+                    $subquery->select(\DB::raw(1))
+                        ->from('absensi')
+                        ->whereColumn('absensi.id_absensi', '_indikasi_siswa.id_absensi')
+                        ->whereIn('absensi.id_kelas', $kelasIds);
                 });
             }
         });

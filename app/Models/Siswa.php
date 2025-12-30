@@ -163,7 +163,14 @@ class Siswa extends Model
             $user = auth()->user();
             
             if ($user && $user->isGuru()) {
-                $kelasIds = $user->kelasYangDiajar()->pluck('id_kelas');
+                // Cache the kelas IDs in the request to avoid multiple queries
+                $kelasIds = app('request')->get('_guru_kelas_ids');
+                
+                if ($kelasIds === null) {
+                    $kelasIds = $user->kelasYangDiajar()->pluck('id_kelas')->toArray();
+                    app('request')->attributes->set('_guru_kelas_ids', $kelasIds);
+                }
+                
                 $query->whereIn('id_kelas', $kelasIds);
             }
         });

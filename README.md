@@ -191,16 +191,62 @@ http://localhost:5000
 
 ### 1. Login ke Sistem
 
-Gunakan kredensial default (jika menggunakan seeder atau database import):
-- Cek tabel `users` di database Anda untuk kredensial login
+Sistem ini memiliki **2 panel terpisah** dengan akses berbeda:
 
-### 2. Kelola Data Master
+#### Panel Administrator (`/admin`)
+- **Akses:** Full control terhadap seluruh sistem
+- **URL:** `http://localhost:8000/admin`
+- **Fitur:**
+  - Manajemen Guru (approve, assign kelas)
+  - CRUD Siswa, Kelas, Absensi
+  - Lihat semua data tanpa filter
+  - Dashboard dengan statistik lengkap
+  - Laporan komprehensif
 
-- **Kelas:** Tambah/edit data kelas (contoh: "XIIRPL", "XTKJ1")
-- **Siswa:** Tambah data siswa dengan kode siswa, nama, kelas, jenis kelamin, dll
-- **Guru:** Kelola data guru dan assign ke kelas
+#### Panel Guru (`/guru`)
+- **Akses:** Terbatas pada kelas yang diajar
+- **URL:** `http://localhost:8000/guru`  
+- **Fitur:**
+  - Lihat kelas yang diajar (read-only)
+  - Lihat siswa di kelas yang diajar (read-only)
+  - Input/edit absensi siswa di kelasnya
+  - Lihat indikasi siswa bermasalah
+  - Dashboard dengan statistik kelas yang diajar
 
-### 3. Registrasi Wajah Siswa
+**Kredensial Default** (jika menggunakan seeder):
+- Cek tabel `users` di database untuk kredensial login
+
+### 2. Registrasi Guru Baru
+
+Guru dapat mendaftar secara mandiri:
+
+1. **Akses halaman registrasi:** `http://localhost:8000/register/guru`
+2. **Isi form registrasi:**
+   - Nama Lengkap
+   - Email (unik)
+   - Password (minimal 8 karakter)
+   - Konfirmasi Password
+3. **Submit form** - Akun akan dibuat dengan status **pending**
+4. **Menunggu approval** dari administrator
+
+### 3. Administrator Approve Guru
+
+Administrator dapat mengelola guru pending:
+
+1. Login ke **Panel Admin** (`/admin`)
+2. Masuk ke menu **Manajemen Guru**
+3. Tab **Pending Approval** akan menampilkan guru yang menunggu
+4. Klik tombol **Approve** untuk mengaktifkan akun
+5. **Assign kelas** yang akan diajar oleh guru tersebut
+6. Guru sekarang dapat login ke Panel Guru
+
+### 4. Kelola Data Master
+
+- **Kelas:** Tambah/edit data kelas (contoh: "XII RPL", "X TKJ 1") - **Admin only**
+- **Siswa:** Tambah data siswa dengan kode siswa, nama, kelas, jenis kelamin, dll - **Admin only**
+- **Guru:** Kelola data guru dan assign ke kelas - **Admin only**
+
+### 5. Registrasi Wajah Siswa
 
 1.  Masuk ke menu **Training/Registrasi Wajah**
 2. Pilih siswa
@@ -208,7 +254,7 @@ Gunakan kredensial default (jika menggunakan seeder atau database import):
 4. Sistem akan menyimpan data wajah menggunakan API Flask
 5. Foto akan disimpan di folder `resources/python/known_faces/`
 
-### 4. Absensi dengan Face Recognition
+### 6. Absensi dengan Face Recognition
 
 1. Akses halaman **Absensi**
 2. Izinkan akses kamera browser
@@ -219,11 +265,53 @@ Gunakan kredensial default (jika menggunakan seeder atau database import):
    - Mencatat kehadiran (jam masuk/keluar)
    - Mendeteksi indikasi mabuk (opsional)
 
-### 5. Lihat Laporan & Rekap
+### 7. Lihat Laporan & Rekap
 
 - Akses menu **Laporan/Rekap Absensi**
 - Filter berdasarkan tanggal, kelas, atau siswa
 - Export data ke Excel/PDF (jika tersedia)
+
+## 🔐 Fitur Keamanan & Authorization
+
+### Role-Based Access Control (RBAC)
+
+Sistem mengimplementasikan **2 role** dengan akses berbeda:
+
+#### Administrator
+- Full CRUD access ke semua resources
+- Dapat approve/reject registrasi guru baru
+- Dapat assign/unassign kelas ke guru
+- Akses ke semua data tanpa filter
+- Mengelola user management
+
+#### Guru
+- Read-only access ke kelas yang diajar
+- Read-only access ke siswa di kelas yang diajar
+- CRUD absensi (hanya untuk siswa di kelasnya)
+- View indikasi siswa bermasalah (filtered by kelas)
+- Tidak dapat menambah/edit/hapus kelas atau siswa
+
+### Global Scopes
+
+Data secara otomatis difilter berdasarkan role:
+- Guru hanya melihat data siswa dari kelas yang diassign
+- Guru hanya melihat absensi dari siswa di kelasnya
+- Guru hanya melihat indikasi siswa dari kelas yang diajar
+- Administrator melihat semua data tanpa filter
+
+### Middleware Protection
+
+- `CheckRole` - Validasi role user untuk akses panel
+- `CheckActiveStatus` - Validasi akun sudah diapprove
+- Automatic redirect berdasarkan role saat login
+
+### Self-Registration Workflow
+
+1. Guru registrasi melalui `/register/guru`
+2. Akun dibuat dengan `is_active = false`
+3. Guru tidak dapat login sampai diapprove
+4. Admin approve akun dan assign kelas
+5. Guru dapat login dan akses Panel Guru
 
 ## 📁 Struktur Project Penting
 
@@ -231,7 +319,19 @@ Gunakan kredensial default (jika menggunakan seeder atau database import):
 website-sistem-absensi-face-recognition/
 ├── app/                          # Laravel application
 │   ├── Models/                   # Model (User, Siswa, Kelas, Absensi, dll)
-│   └── Http/Controllers/         # Controllers
+│   ├── Policies/                 # 🔥 Authorization policies
+│   ├── Http/
+│   │   ├── Controllers/
+│   │   │   └── Auth/            # 🔥 Registration controller
+│   │   └── Middleware/          # 🔥 CheckRole, CheckActiveStatus
+│   ├── Filament/
+│   │   ├── Admin/               # 🔥 Admin panel resources
+│   │   │   └── Resources/       # UserResource, SiswaResource, dll
+│   │   └── Guru/                # 🔥 Guru panel resources
+│   │       ├── Resources/       # Filtered resources untuk guru
+│   │       └── Widgets/         # GuruStatsOverview
+│   └── Providers/
+│       └── Filament/            # AdminPanelProvider, GuruPanelProvider
 ├── database/
 │   ├── migrations/               # Database migrations
 │   └── seeders/                  # Database seeders
@@ -241,11 +341,11 @@ website-sistem-absensi-face-recognition/
 │   │   ├── requirements.txt     # Python dependencies
 │   │   ├── known_faces/         # Folder penyimpanan foto training
 │   │   └── face_database.json   # Database face encoding
-│   └── views/                    # Blade templates
-├── public/                       # Public assets
+│   └── views/
+│       └── auth/                # 🔥 Registration views
 ├── routes/
-│   └── web.php                  # Web routes
-├── . env.example                 # Environment template
+│   └── web.php                  # 🔥 Registration routes
+├── .env.example                 # Environment template
 ├── absensi_face_db              # 🔥 Database SQL dump
 ├── composer.json                # PHP dependencies
 ├── package.json                 # Node.js dependencies
@@ -362,9 +462,19 @@ _(Anda bisa tambahkan screenshot aplikasi di sini)_
 
 ## 🔄 Update Log
 
+- **v2.0** - Multi-Panel Authentication System
+  - Role-based access control (Administrator & Guru)
+  - Self-registration untuk guru dengan approval workflow
+  - Panel Admin (`/admin`) dengan full access
+  - Panel Guru (`/guru`) dengan filtered access
+  - Global scopes untuk data filtering otomatis
+  - Authorization policies untuk setiap resource
+  - Guru management dengan assign kelas
+  - Dashboard terpisah untuk Admin dan Guru
+
 - **v1.0** - Initial release dengan fitur face recognition dasar
-- Sistem absensi siswa
-- Deteksi indikasi mabuk
-- Multi-kelas dan guru
+  - Sistem absensi siswa
+  - Deteksi indikasi mabuk
+  - Multi-kelas dan guru
 
 ---

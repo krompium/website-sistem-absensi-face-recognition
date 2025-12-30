@@ -3,8 +3,13 @@
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\FaceRecognitionController;
 	
-// halaman utama 
-Route::get('/', [FaceRecognitionController::class, 'index'])->name('home');  
+// Redirect halaman utama ke admin panel
+Route::get('/', function () {
+    return redirect('/admin');
+});
+
+// Halaman face recognition (tidak lagi jadi landing page)
+Route::get('/face-recognition', [FaceRecognitionController::class, 'index'])->name('face.home');
 
 // training routes 
 Route::get('/train', [FaceRecognitionController::class, 'trainPage'])->name('train'); 

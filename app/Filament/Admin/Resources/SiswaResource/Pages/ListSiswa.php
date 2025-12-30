@@ -1,6 +1,6 @@
 <?php
 // File: app/Filament/Resources/SiswaResource/Pages/ListSiswa.php
-namespace App\Filament\Resources\SiswaResource\Pages;
+namespace App\Filament\Admin\Resources\SiswaResource\Pages;
 
 use App\Filament\Admin\Resources\SiswaResource;
 use App\Models\Siswa;

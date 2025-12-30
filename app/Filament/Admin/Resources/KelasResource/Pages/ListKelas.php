@@ -1,6 +1,6 @@
 <?php
 // File: app/Filament/Resources/KelasResource/Pages/ListKelas.php
-namespace App\Filament\Resources\KelasResource\Pages;
+namespace App\Filament\Admin\Resources\KelasResource\Pages;
 
 use App\Filament\Admin\Resources\KelasResource;
 use App\Models\Kelas;

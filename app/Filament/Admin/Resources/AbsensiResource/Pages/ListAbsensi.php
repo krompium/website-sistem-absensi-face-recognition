@@ -1,7 +1,7 @@
 <?php
 
 // File: app/Filament/Resources/AbsensiResource/Pages/ListAbsensi.php
-namespace App\Filament\Resources\AbsensiResource\Pages;
+namespace App\Filament\Admin\Resources\AbsensiResource\Pages;
 
 use App\Filament\Admin\Resources\AbsensiResource;
 use App\Models\Absensi;

@@ -2,7 +2,7 @@
 
 // =====================================================
 // File: app/Filament/Resources/AbsensiResource/Pages/CreateAbsensi.php
-namespace App\Filament\Resources\AbsensiResource\Pages;
+namespace App\Filament\Admin\Resources\AbsensiResource\Pages;
 
 use App\Filament\Admin\Resources\AbsensiResource;
 use Filament\Resources\Pages\CreateRecord;

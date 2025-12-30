@@ -1,7 +1,7 @@
 <?php
 
 // File: app/Filament/Resources/IndikasiSiswaResource/Pages/ListIndikasiSiswa.php
-namespace App\Filament\Resources\IndikasiSiswaResource\Pages;
+namespace App\Filament\Admin\Resources\IndikasiSiswaResource\Pages;
 
 use App\Filament\Admin\Resources\IndikasiSiswaResource;
 use App\Models\IndikasiSiswa;

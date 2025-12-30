@@ -1,6 +1,6 @@
 <?php
 
-namespace App\Filament\Resources\IndikasiSiswaResource\Pages;
+namespace App\Filament\Admin\Resources\IndikasiSiswaResource\Pages;
 
 use App\Filament\Admin\Resources\IndikasiSiswaResource;
 use Filament\Actions;

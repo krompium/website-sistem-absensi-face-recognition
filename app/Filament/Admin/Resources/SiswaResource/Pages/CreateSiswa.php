@@ -2,7 +2,7 @@
 
 // =====================================================
 // File: app/Filament/Resources/SiswaResource/Pages/CreateSiswa.php
-namespace App\Filament\Resources\SiswaResource\Pages;
+namespace App\Filament\Admin\Resources\SiswaResource\Pages;
 
 use App\Filament\Admin\Resources\SiswaResource;
 use Filament\Resources\Pages\CreateRecord;

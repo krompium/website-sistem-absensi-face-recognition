@@ -2,11 +2,17 @@
 
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\FaceRecognitionController;
+use App\Http\Controllers\Auth\RegisterController;
 	
 // Redirect halaman utama ke admin panel
 Route::get('/', function () {
     return redirect('/admin');
 });
+
+// Guru Registration Routes
+Route::get('/register/guru', [RegisterController::class, 'showRegistrationForm'])->name('register.guru');
+Route::post('/register/guru', [RegisterController::class, 'register'])->name('register.guru.submit');
+Route::get('/register/guru/success', [RegisterController::class, 'success'])->name('register.guru.success');
 
 // Halaman face recognition (tidak lagi jadi landing page)
 Route::get('/face-recognition', [FaceRecognitionController::class, 'index'])->name('face.home');

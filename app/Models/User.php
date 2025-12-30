@@ -56,7 +56,8 @@ class User extends Authenticatable
             'id_kelas',
             'id_user',
             'id_kelas'
-        )->withTimestamps();
+        )->withTimestamps()
+         ->select('kelas.*');
     }
 
     // ========== HELPER METHODS ==========

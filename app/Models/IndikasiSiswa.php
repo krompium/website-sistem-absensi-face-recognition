@@ -196,4 +196,32 @@ class IndikasiSiswa extends Model
               ->orWhere('average_prob_sober', '<=', (1 - $threshold));
         });
     }
+
+    // ========== GLOBAL SCOPES ==========
+    
+    protected static function booted()
+    {
+        static::addGlobalScope('guruAccess', function ($query) {
+            $user = auth()->user();
+            
+            if ($user && $user->isGuru()) {
+                // Use cached kelas IDs from request
+                $kelasIds = app('request')->get('_guru_kelas_ids');
+                
+                if ($kelasIds === null) {
+                    $kelasIds = $user->kelasYangDiajar()->pluck('kelas.id_kelas')->toArray();
+                    app('request')->attributes->set('_guru_kelas_ids', $kelasIds);
+                }
+                
+                if (!empty($kelasIds)) {
+                    // Use whereHas because IndikasiSiswa doesn't have direct id_kelas
+                    $query->whereHas('absensi', function ($q) use ($kelasIds) {
+                        $q->whereIn('absensi.id_kelas', $kelasIds);
+                    });
+                } else {
+                    $query->whereRaw('1 = 0');
+                }
+            }
+        });
+    }
 }

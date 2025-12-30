@@ -1,5 +1,4 @@
 <?php
-// app/Providers/Filament/AdminPanelProvider.php
 
 namespace App\Providers\Filament;
 
@@ -19,38 +18,33 @@ use Illuminate\Session\Middleware\AuthenticateSession;
 use Illuminate\Session\Middleware\StartSession;
 use Illuminate\View\Middleware\ShareErrorsFromSession;
 
-class AdminPanelProvider extends PanelProvider
+class GuruPanelProvider extends PanelProvider
 {
     public function panel(Panel $panel): Panel
     {
         return $panel
-            ->default()
-            ->id('admin')
-            ->path('admin')
+            ->id('guru')
+            ->path('guru')
             ->login()
             ->authGuard('web')
             ->colors([
-                'primary' => Color::Blue,
+                'primary' => Color::Emerald,
                 'danger' => Color::Red,
                 'gray' => Color::Gray,
                 'info' => Color::Sky,
                 'success' => Color::Green,
                 'warning' => Color::Amber,
             ])
-            ->brandName('Sistem Absensi Face Recognition')
+            ->brandName('Portal Guru - Sistem Absensi')
             ->favicon(asset('images/favicon.png'))
-            ->discoverResources(in: app_path('Filament/Admin/Resources'), for: 'App\\Filament\\Admin\\Resources')
-            ->discoverPages(in: app_path('Filament/Pages'), for: 'App\\Filament\\Pages')
+            ->discoverResources(in: app_path('Filament/Guru/Resources'), for: 'App\\Filament\\Guru\\Resources')
+            ->discoverPages(in: app_path('Filament/Guru/Pages'), for: 'App\\Filament\\Guru\\Pages')
             ->pages([
                 Pages\Dashboard::class,
             ])
-            ->discoverWidgets(in: app_path('Filament/Widgets'), for: 'App\\Filament\\Widgets')
+            ->discoverWidgets(in: app_path('Filament/Guru/Widgets'), for: 'App\\Filament\\Guru\\Widgets')
             ->widgets([
-                // Register widgets in order
-                \App\Filament\Widgets\StatsOverviewWidget::class,
-                \App\Filament\Widgets\AttendanceChartWidget::class,
-                \App\Filament\Widgets\ClassAttendanceWidget::class,
-                \App\Filament\Widgets\LatestAttendancesWidget::class,
+                \App\Filament\Guru\Widgets\GuruStatsOverview::class,
             ])
             ->middleware([
                 EncryptCookies::class,
@@ -65,15 +59,13 @@ class AdminPanelProvider extends PanelProvider
             ])
             ->authMiddleware([
                 Authenticate::class,
-                'check.role:administrator',
+                'check.role:guru',
                 'check.active',
             ])
             ->databaseNotifications(false)
-            // ->databaseNotificationsPolling('30s')
             ->navigationGroups([
-                'Master Data',
-                'Monitoring',
-                'Laporan',
+                'Data Kelas',
+                'Monitoring Absensi',
             ])
             ->sidebarCollapsibleOnDesktop()
             ->maxContentWidth('full');

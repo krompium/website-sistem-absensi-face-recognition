@@ -231,11 +231,11 @@ class Absensi extends Model
                 $kelasIds = app('request')->get('_guru_kelas_ids');
                 
                 if ($kelasIds === null) {
-                    $kelasIds = $user->kelasYangDiajar()->pluck('id_kelas')->toArray();
+                    $kelasIds = $user->kelasYangDiajar()->pluck('kelas.id_kelas')->toArray();
                     app('request')->attributes->set('_guru_kelas_ids', $kelasIds);
                 }
                 
-                $query->whereIn('id_kelas', $kelasIds);
+                $query->whereIn('absensi.id_kelas', $kelasIds);
             }
         });
     }

@@ -26,6 +26,7 @@ class GuruPanelProvider extends PanelProvider
             ->id('guru')
             ->path('guru')
             ->login()
+            ->authGuard('web')
             ->colors([
                 'primary' => Color::Emerald,
                 'danger' => Color::Red,

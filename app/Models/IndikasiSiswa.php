@@ -213,10 +213,14 @@ class IndikasiSiswa extends Model
                     app('request')->attributes->set('_guru_kelas_ids', $kelasIds);
                 }
                 
-                // Use whereHas for better clarity and to avoid ambiguous columns
-                $query->whereHas('absensi', function ($q) use ($kelasIds) {
-                    $q->whereIn('absensi.id_kelas', $kelasIds);
-                });
+                if (!empty($kelasIds)) {
+                    // Use whereHas because IndikasiSiswa doesn't have direct id_kelas
+                    $query->whereHas('absensi', function ($q) use ($kelasIds) {
+                        $q->whereIn('absensi.id_kelas', $kelasIds);
+                    });
+                } else {
+                    $query->whereRaw('1 = 0');
+                }
             }
         });
     }

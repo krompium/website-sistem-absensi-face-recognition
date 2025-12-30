@@ -15,22 +15,23 @@ class CheckRole
      */
     public function handle(Request $request, Closure $next, string $role): Response
     {
-        if (!auth()->check()) {
-            return redirect('/admin/login');
-        }
-
         $user = auth()->user();
 
-        // Check if user has the required role
+        if (!$user) {
+            $panelPath = $role === 'administrator' ? 'admin' : 'guru';
+            return redirect("/{$panelPath}/login");
+        }
+
         if ($user->role !== $role) {
-            // Redirect to appropriate panel based on actual role
             if ($user->isAdministrator()) {
                 return redirect('/admin');
-            } elseif ($user->isGuru()) {
-                return redirect('/guru');
             }
             
-            abort(403, 'Unauthorized access.');
+            if ($user->isGuru()) {
+                return redirect('/guru');
+            }
+
+            abort(403, 'Akses ditolak.');
         }
 
         return $next($request);

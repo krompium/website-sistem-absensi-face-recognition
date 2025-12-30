@@ -235,7 +235,11 @@ class Absensi extends Model
                     app('request')->attributes->set('_guru_kelas_ids', $kelasIds);
                 }
                 
-                $query->whereIn('absensi.id_kelas', $kelasIds);
+                if (!empty($kelasIds)) {
+                    $query->whereIn('absensi.id_kelas', $kelasIds);
+                } else {
+                    $query->whereRaw('1 = 0');
+                }
             }
         });
     }

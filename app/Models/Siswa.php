@@ -171,7 +171,11 @@ class Siswa extends Model
                     app('request')->attributes->set('_guru_kelas_ids', $kelasIds);
                 }
                 
-                $query->whereIn('siswa.id_kelas', $kelasIds);
+                if (!empty($kelasIds)) {
+                    $query->whereIn('siswa.id_kelas', $kelasIds);
+                } else {
+                    $query->whereRaw('1 = 0');
+                }
             }
         });
     }

@@ -1,7 +1,8 @@
 <?php
 
-use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\FaceRecognitionController;
+use App\Http\Controllers\SecureImageController;
+use Illuminate\Support\Facades\Route;
 	
 // Redirect halaman utama ke admin panel
 Route::get('/', function () {
@@ -11,16 +12,14 @@ Route::get('/', function () {
 // Halaman face recognition (tidak lagi jadi landing page)
 Route::get('/face-recognition', [FaceRecognitionController::class, 'index'])->name('face.home');
 
-// training routes 
-Route::get('/train', [FaceRecognitionController::class, 'trainPage'])->name('train'); 
-Route::post('/train', [FaceRecognitionController::class, 'train'])->name('train.submit');
+// Source image routes
+Route::middleware('auth')->group(function () {
+    Route::get('/secure-image/face/{session_id}', [SecureImageController::class, 'showFace'])
+        ->name('secure.image.face');
 
-// detect routes 
-Route::get('/detect', [FaceRecognitionController::class, 'detectPage'])->name('detect');
-Route::post('/detect', [FaceRecognitionController::class, 'detect'])->name('detect.submit');  
+    Route::get('/secure-image/frame/{session_id}/{frame_number}', [SecureImageController::class, 'showFrame'])
+        ->name('secure.image.frame');
 
-// live camera route 
-Route::get('/live', [FaceRecognitionController::class, 'livePage'])->name('live');  
-
-// delete face 
-Route::delete('/delete/{name}', [FaceRecognitionController::class, 'delete'])->name('delete');
+    Route::get('/secure-image/frames-list/{session_id}', [SecureImageController::class, 'getFramesList'])
+        ->name('secure.image.frames.list');
+});

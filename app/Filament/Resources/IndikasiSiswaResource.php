@@ -394,7 +394,7 @@ class IndikasiSiswaResource extends Resource
                     ->label('Lihat Siswa')
                     ->icon('heroicon-o-user')
                     ->color('primary')
-                    ->url(fn($record) => route('filament. admin.resources.siswas. edit', [
+                    ->url(fn($record) => route('filament.admin.resources.siswas.edit', [
                         'record' => $record->absensi->kode_siswa,
                     ])),
             ])
